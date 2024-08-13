@@ -4,6 +4,8 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.imageio.ImageIO;
@@ -12,17 +14,18 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.Optional;
 
-public class Resize{
+@AllArgsConstructor
+@NoArgsConstructor
+public class Resize {
     private static final String DESTINATION_BUCKET_NAME = "image-bucket-origin-destination";
-    private static final String RESIZED_IMAGE_PREFIX = "resized/";
+    private static final String RESIZED_IMAGE_PREFIX = "resized-";
+    private static final String FILENAME = "image";
     private static final Logger logger = LoggerFactory.getLogger(Resize.class);
-
     private AmazonS3 s3Client = AmazonS3ClientBuilder.standard().build();
 
-    public String handleResize(Optional<String> srcBucket, Optional<String> fileName, Optional<Integer> height, Optional<Integer> width) {
-        logger.info("Inside Resize method for: \n" + srcBucket + " from " + fileName);
+    public String handleResize(BufferedImage srcImage, Optional<Integer> height, Optional<Integer> width) {
+        logger.info("Inside Resize method");
         try {
-            BufferedImage srcImage = downloadImageFromS3(srcBucket.get(), fileName.get());
             logger.info("Downloaded image from S3");
 
             Integer newHeight = height.orElseGet(srcImage::getHeight);
@@ -32,18 +35,12 @@ public class Resize{
             BufferedImage resizedImage = resizeImage(srcImage, newHeight, newWidth);
             logger.info("Image resized! Uploading to S3 Bucket");
 
-            uploadImageToS3(resizedImage, DESTINATION_BUCKET_NAME, RESIZED_IMAGE_PREFIX + fileName.orElse("empty"));
+            uploadImageToS3(resizedImage, DESTINATION_BUCKET_NAME, RESIZED_IMAGE_PREFIX + FILENAME);
 
             return "Image resized successfully!";
         } catch (IOException e) {
             throw new RuntimeException("Error resizing image: " + e.getMessage());
         }
-    }
-
-    private BufferedImage downloadImageFromS3(String bucketName, String key) throws IOException {
-        GetObjectRequest getObjectRequest = new GetObjectRequest(bucketName, key);
-        InputStream inputStream = s3Client.getObject(getObjectRequest).getObjectContent();
-        return ImageIO.read(inputStream);
     }
 
     private void uploadImageToS3(BufferedImage image, String bucketName, String key) throws IOException {

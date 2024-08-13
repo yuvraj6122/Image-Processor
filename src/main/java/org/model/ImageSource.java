@@ -8,6 +8,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
+@Builder
 public class ImageSource {
     private Optional<String> sourceBucket;
     private Optional<String> fileName;
