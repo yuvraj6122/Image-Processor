@@ -23,7 +23,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class OptionalTypeAdapterTest {
-
     @Mock
     private TypeAdapter<String> typeAdapter;
 
